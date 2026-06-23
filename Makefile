@@ -4,3 +4,6 @@ dev:
 
 run:
 	fastapi dev main.py
+
+init:
+	pip freeze > requirements.txt
