@@ -5,3 +5,5 @@ numpy
 pillow
 tensorflow
 joblib
+scikit-learn
+matplotlib
