@@ -1,14 +1,17 @@
-from fastapi import FastAPI, APIRouter, UploadFile, File
-from fastapi.responses import StreamingResponse
-from req.iris_input import IrisInput 
-from req.california_housing_input import CaliforniaHousingInput
-from joblib import load
-import numpy as np
-import tensorflow as tf
-from utils.preprocess_image import prepare_image_grey
 import os
 import io
 import zipfile
+from joblib import load
+import numpy as np
+import tensorflow as tf
+
+from fastapi import FastAPI, APIRouter, UploadFile, File
+from fastapi.responses import StreamingResponse
+
+from req.iris_input import IrisInput 
+from req.california_housing_input import CaliforniaHousingInput
+from utils.preprocess_image import prepare_image_grey
+
 
 app = FastAPI()
 

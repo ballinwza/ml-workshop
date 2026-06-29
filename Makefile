@@ -6,4 +6,4 @@ run:
 	fastapi dev main.py
 
 init:
-	pip freeze > requirements.txt
+	pip-compile requirements.in && pip-compile requirements-dev.in && pip-sync requirements-dev.txt
