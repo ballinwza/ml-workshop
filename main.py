@@ -1,18 +1,16 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, UploadFile, File
+from fastapi.responses import StreamingResponse
 from req.iris_input import IrisInput 
 from req.california_housing_input import CaliforniaHousingInput
 from joblib import load
 import numpy as np
+import tensorflow as tf
+from utils.preprocess_image import prepare_image_grey
+import os
+import io
+import zipfile
 
 app = FastAPI()
-
-@app.get("/")
-def read_root():
-    return {"message": "Hello World"}
-
-@app.get("/items/{item_id}")
-def read_item(item_id: int):
-    return {"item_id": item_id}
 
 # Prediction route
 prediction_router = APIRouter(
@@ -59,3 +57,49 @@ def predict_california_housing(payload:CaliforniaHousingInput):
         "Predicted house price": str(f"${calculated_prediction_income:,.2f}")
     }
     return result
+
+fashion_model = tf.keras.models.load_model("models/fashion_model_1.keras")
+@prediction_router.post("/fashion")
+async def predict_fashion(file: UploadFile = File(...)):
+    class_names = ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat', 'Sandal',
+               'Shirt', 'Sneaker', 'Bag', 'Ankle boot']
+    
+    prob_index, confidence = await prepare_image_grey(fashion_model,file)
+    return {
+        "Predicted Category": class_names[prob_index],
+        "Confidence": f"{confidence*100:.2f}%"
+    }
+
+# Download route
+download_router = APIRouter(
+    prefix="/download",
+    tags=["Download Example"]
+)
+app.include_router(download_router)
+
+@download_router.get("/fashion-example", summary="Download fashion image for testing")
+async def downlod_fashion_example():
+    folder_path = "data/fashion-example"
+
+    if not os.path.exists(folder_path) or not os.listdir(folder_path):
+        return {
+            "message": "Not founded"
+        }
+
+    zip_buffer = io.BytesIO()
+
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+        for filename in os.listdir(folder_path):
+            file_path = os.path.join(folder_path, filename)
+            if os.path.isfile(file_path):
+                zip_file.write(file_path, filename)
+
+    zip_buffer.seek(0)
+    return StreamingResponse(
+        zip_buffer,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition":"attachment; filename=fashion-example",
+            "Cache-Control":"no-cache"
+        }
+    )
