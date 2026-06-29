@@ -88,6 +88,8 @@ idna==3.18
     #   requests
 jinja2==3.1.6
     # via fastapi
+joblib==1.5.3
+    # via -r requirements.in
 keras==3.15.0
     # via tensorflow
 libclang==18.1.1
